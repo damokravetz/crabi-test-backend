@@ -23,16 +23,16 @@ class UserController {
             let userBlackListed= await userService.checkUserBlackListed(userData);
             if(userBlackListed==false){
                 let response=await userService.register(userData);
-                res.status(201).send("User "+response.name+" registered successfully");
+                res.status(201).send({message:"User "+response.name+" registered successfully"});
             }else{
-                res.status(409).send("This user is Blacklisted");
+                res.status(409).send({error:"This user is Blacklisted"});
             }
         }else{
-            res.status(409).send("There is already a user registered with the same email address");
+            res.status(409).send({error:"There is already a user registered with the same email address"});
         }
         }catch(e){
             console.log(e)
-            res.status(500).send("There was an error");
+            res.status(500).send({error:"There was an error"});
         }
     }
 
@@ -50,10 +50,10 @@ class UserController {
             if(token!=null){
                 res.status(200).json({token});
             }else{
-                res.status(403).send("Login failed, wrong username or password");
+                res.status(403).send({error:"Login failed, wrong username or password"});
             }
         }catch(e){
-            res.status(500).send("Error trying to login");
+            res.status(500).send({error:"Error trying to login"});
         }
     }
 
@@ -64,10 +64,10 @@ class UserController {
             if(user!=null){
                 res.status(200).json(user);
             }else{
-                res.status(500).send("Error finding user");
+                res.status(500).send({error:"Error finding user"});
             }
         }catch(e){
-            res.status(e.status).send(e.message);
+            res.status(e.status).send({error:e.message});
         }
     }
 
