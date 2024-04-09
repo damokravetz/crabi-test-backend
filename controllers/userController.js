@@ -1,16 +1,28 @@
 const userService = require('../services/userService.js');
 const User = require('../models/UserModel.js');
 const authService = require('../services/authService.js');
+const Joi = require('@hapi/joi');
 
 class UserController {
 
     async create(req, res) {
+        const userSchema = Joi.object({
+            name: Joi.string().min(3).max(30).required(),
+            surname: Joi.string().min(3).max(30).required(),
+            age: Joi.number().integer().min(18).required(),
+            email: Joi.string().email().required(),
+            password: Joi.string().min(6).max(30).required()
+        });
+        const { error, value: userData } = await userSchema.validate(req.body);
+        if (error) {
+            return res.status(400).json({ error: error.details[0].message });
+        }
         try{
-            let userExists=await userService.checkUserExists(req.body.email);
+            let userExists=await userService.checkUserExists(userData.email);
         if(userExists==false){
-            let userBlackListed= await userService.checkUserBlackListed(req.body);
+            let userBlackListed= await userService.checkUserBlackListed(userData);
             if(userBlackListed==false){
-                let response=await userService.register(req.body);
+                let response=await userService.register(userData);
                 res.status(201).send("User "+response.name+" registered successfully");
             }else{
                 res.status(409).send("This user is Blacklisted");
@@ -25,8 +37,16 @@ class UserController {
     }
 
     async login(req, res){
+        const loginSchema = Joi.object({
+            email: Joi.string().email().required(),
+            password: Joi.string().min(6).max(30).required()
+        });
+        const { error, value: userData } = loginSchema.validate(req.body);
+        if (error) {
+            return res.status(400).json({ error: error.details[0].message });
+        }
         try{
-            const token=await userService.login(req.body.email, req.body.password);
+            const token=await userService.login(userData.email, userData.password);
             if(token!=null){
                 res.status(200).json({token});
             }else{
